@@ -28,23 +28,23 @@ class spQCNNanim(Scene):
       #########
       # WIRES #
       #########
-      def extrude(start_x, end_x):
+      def extrude(start_x, end_x, rate_func = linear):
          qs = []
          for wire in range(0,8,1):
             qs.append(Line(start=[start_x, -3.5+wire, 0.], end=[end_x, -3.5+wire, 0.], buff=0))
 
-         return tuple([Create(q) for q in qs])
+         return tuple([Create(q, rate_func=rate_func) for q in qs])
 
-      create_wires0 = tuple([Create(Line(start=[x0, -3.5+wire, 0.], end=[x1, -3.5+wire, 0.]), rate_functions=linear)
+      create_wires0 = tuple([Create(Line(start=[x0, -3.5+wire, 0.], end=[x1, -3.5+wire, 0.]), rate_func=rate_functions.ease_in_sine)
                            for wire in range(8)]) 
       # First split
       split_wires0 = []
       # Even wires go up
       for i, wire in enumerate(range(0,8,2)):
-         split_wires0.append(Create(Line(start=[x1, -3.5+wire, 0.], end=[x2, -3.5+i, 0.], buff=0)))
+         split_wires0.append(Create(Line(start=[x1, -3.5+wire, 0.], end=[x2, -3.5+i, 0.], buff=0), rate_func=linear))
       # Odd wires go down
       for i, wire in enumerate(range(1,8,2)):
-         split_wires0.append(Create(Line(start=[x1, -3.5+wire, 0.], end=[x2, +.5+i, 0.],  buff=0)))
+         split_wires0.append(Create(Line(start=[x1, -3.5+wire, 0.], end=[x2, +.5+i, 0.],  buff=0), rate_func=linear))
       split_wires0 = tuple(split_wires0)
 
       # Extrude
@@ -53,16 +53,16 @@ class spQCNNanim(Scene):
       # Second split
       split_wires1 = []
       for i, wire in enumerate(range(0,4,2)):
-         split_wires1.append(Create(Line(start=[x3, -3.5+wire, 0.],     end=[x4, -3.5+i, 0.], buff=0)))
-         split_wires1.append(Create(Line(start=[x3, -3.5+wire + 4, 0.], end=[x4, -3.5+i + 4, 0.], buff=0)))
+         split_wires1.append(Create(Line(start=[x3, -3.5+wire, 0.],     end=[x4, -3.5+i, 0.], buff=0), rate_func=linear, run_time=.5))
+         split_wires1.append(Create(Line(start=[x3, -3.5+wire + 4, 0.], end=[x4, -3.5+i + 4, 0.], buff=0), rate_func=linear, run_time=.5))
       for i, wire in enumerate(range(1,4,2)):
-         split_wires1.append(Create(Line(start=[x3, -3.5+wire, 0.],    end=[x4, -1.5+i, 0.], buff=0)))
-         split_wires1.append(Create(Line(start=[x3, -3.5+wire+ 4, 0.], end=[x4, -1.5+i + 4, 0.], buff=0)))
+         split_wires1.append(Create(Line(start=[x3, -3.5+wire, 0.],    end=[x4, -1.5+i, 0.], buff=0), rate_func=linear, run_time=.5))
+         split_wires1.append(Create(Line(start=[x3, -3.5+wire+ 4, 0.], end=[x4, -1.5+i + 4, 0.], buff=0), rate_func=linear, run_time=.5))
 
       split_wires1 = tuple(split_wires1)
 
       # Extrude
-      extrude_wires1 = extrude(x4, x5)
+      extrude_wires1 = extrude(x4, x5, rate_func = rate_functions.linear)
      
       w0 = AnimationGroup(*create_wires0)
       w1 = AnimationGroup(*split_wires0)
@@ -70,7 +70,7 @@ class spQCNNanim(Scene):
       w3 = AnimationGroup(*split_wires1)
       w4 = AnimationGroup(*extrude_wires1)
 
-      wires = Succession(w0, w1, w2, w3, w4, rate_functions=linear)
+      wires = Succession(w0, w1, w2, w3, w4)
 
       ###############
       # MEASUREMENT #
@@ -95,6 +95,6 @@ class spQCNNanim(Scene):
       U1 = AnimationGroup(*( createU(1, 3.6, 1.5, .25, 2) + createU(1, 3.6, 1.5, .25, -2)))
       U2 = AnimationGroup(*( createU(2, 1.6, 1, 3.75, -3) + createU(2, 1.6, 1, 3.75,  3) + createU(2, 1.6, 1, 3.75,  1) + createU(2, 1.6, 1, 3.75, -1)))
       self.play(write_state0)
-      self.play(wires, Succession(U0,U1,U2, lag_ratio=2))
+      self.play(wires, Succession(Succession(Succession(U0, U1, lag_ratio=2), U2, lag_ratio=1.2)) )
       self.play(write_zs)
 
